@@ -1,86 +1,87 @@
-# Developer Evaluation Project
+# 🍻 Developer Evaluation Project - API de Vendas (OMNIA)
 
-`READ CAREFULLY`
+Este projeto foi construído para avaliação técnica focada na construção de uma API RESTful completa e madura. Ele atende ao caso de uso da "DeveloperStore" utilizando o ecossistema .NET 8.
 
-## Instructions
-**The test below will have up to 7 calendar days to be delivered from the date of receipt of this manual.**
+## 🚀 Tecnologias Utilizadas
 
-- The code must be versioned in a public Github repository and a link must be sent for evaluation once completed
-- Upload this template to your repository and start working from it
-- Read the instructions carefully and make sure all requirements are being addressed
-- The repository must provide instructions on how to configure, execute and test the project
-- Documentation and overall organization will also be taken into consideration
+- **.NET 8.0**
+- **Entity Framework Core (PostgreSQL)**
+- **MediatR (Padrão CQRS e Mediator)**
+- **AutoMapper** (Mapeamento de DTOs)
+- **FluentValidation** (Validação fail-fast na entrada da API)
+- **xUnit, Bogus e NSubstitute** (Testes Unitários)
+- **Docker Compose** (Containerização do Banco de Dados e Cache)
+- **Swagger** (Documentação Interativa da API)
 
-## Use Case
-**You are a developer on the DeveloperStore team. Now we need to implement the API prototypes.**
+## 💼 Regras de Negócios Implementadas (DDD)
 
-As we work with `DDD`, to reference entities from other domains, we use the `External Identities` pattern with denormalization of entity descriptions.
+A aplicação de negócio foca no Domínio de **Vendas (Sales)**, com as seguintes regras matemáticas restritas, validadas profundamente no `Domain`:
 
-Therefore, you will write an API (complete CRUD) that handles sales records. The API needs to be able to inform:
+1. Compras com quantidade abaixo de **4 itens**: Nenhum desconto é aplicado.
+2. Compras com **4 a 9 itens** idênticos: Recebem **10% de desconto**.
+3. Compras com **10 a 20 itens** idênticos: Recebem **20% de desconto**.
+4. Limite de Venda: **Não é possível** vender mais de 20 itens idênticos por produto na mesma venda.
 
-* Sale number
-* Date when the sale was made
-* Customer
-* Total sale amount
-* Branch where the sale was made
-* Products
-* Quantities
-* Unit prices
-* Discounts
-* Total amount for each item
-* Cancelled/Not Cancelled
+*Nota: O Domínio está blindado contra adições parciais. Mesmo adicionando itens aos poucos, se o acumulado na venda do mesmo produto ultrapassar 20, o Domínio bloqueará e lançará exceção.*
 
-It's not mandatory, but it would be a differential to build code for publishing events of:
-* SaleCreated
-* SaleModified
-* SaleCancelled
-* ItemCancelled
+## 🏗 Arquitetura
 
-If you write the code, **it's not required** to actually publish to any Message Broker. You can log a message in the application log or however you find most convenient.
+O projeto adota os princípios de **Clean Architecture e Domain-Driven Design (DDD)**:
 
-### Business Rules
+- **Domain:** Modelagem Rica (`Sale`, `SaleItem`), validações de negócio, enums e contratos de repositório (`ISaleRepository`).
+- **Application:** Casos de Uso manipulados como Commands/Queries pelo `MediatR` (`CreateSale`, `UpdateSale`, `GetSale`, `DeleteSale`).
+- **ORM (Infra):** Implementação concreta dos repositórios e Mapeamentos do EF Core.
+- **IoC:** Módulo isolado focado no contêiner de Injeção de Dependência para deixar a WebApi o mais limpa possível.
+- **WebApi:** Controladores, tratamento de rotas e perfis de conversão Request/Response.
 
-* Purchases above 4 identical items have a 10% discount
-* Purchases between 10 and 20 identical items have a 20% discount
-* It's not possible to sell above 20 identical items
-* Purchases below 4 items cannot have a discount
+## ⚙️ Como Executar o Projeto Localmente
 
-These business rules define quantity-based discounting tiers and limitations:
+### 1. Requisitos
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) rodando na máquina.
+- [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 
-1. Discount Tiers:
-   - 4+ items: 10% discount
-   - 10-20 items: 20% discount
+### 2. Subindo as Dependências (Bancos de Dados)
+Na raiz do diretório do backend (onde está o arquivo `docker-compose.yml`), rode o seguinte comando para subir o PostgreSQL, MongoDB e o Redis:
 
-2. Restrictions:
-   - Maximum limit: 20 items per product
-   - No discounts allowed for quantities below 4 items
+```bash
+docker-compose up -d
+```
 
-## Overview
-This section provides a high-level overview of the project and the various skills and competencies it aims to assess for developer candidates. 
+### 3. Rodando as Migrations (Opcional - caso não rode no start)
+Para criar as tabelas base, vá para o diretório `src/Ambev.DeveloperEvaluation.WebApi/` e execute:
+```bash
+dotnet ef database update --project ../Ambev.DeveloperEvaluation.ORM
+```
 
-See [Overview](/.doc/overview.md)
+### 4. Executando a API
+Ainda na raiz do `backend/src/Ambev.DeveloperEvaluation.WebApi`, execute:
+```bash
+dotnet run
+```
+**Acesse o Swagger no seu navegador local:** `https://localhost:xxxx/swagger` para testar os endpoints interativamente.
 
-## Tech Stack
-This section lists the key technologies used in the project, including the backend, testing, frontend, and database components. 
+## 🧪 Testes
 
-See [Tech Stack](/.doc/tech-stack.md)
+A suíte de testes unitários validam 100% das regras de negócio do Domínio descritas acima.
 
-## Frameworks
-This section outlines the frameworks and libraries that are leveraged in the project to enhance development productivity and maintainability. 
+Para rodar os testes, acesse o diretório raiz e execute:
+```bash
+dotnet test
+```
 
-See [Frameworks](/.doc/frameworks.md)
+## 📋 Endpoints Disponíveis
+A API oferece as rotas padrão CRUD via `SalesController`:
 
-<!-- 
-## API Structure
-This section includes links to the detailed documentation for the different API resources:
-- [API General](./docs/general-api.md)
-- [Products API](/.doc/products-api.md)
-- [Carts API](/.doc/carts-api.md)
-- [Users API](/.doc/users-api.md)
-- [Auth API](/.doc/auth-api.md)
--->
+- `POST /api/Sales` - Cria uma venda inteira com itens e já processa limites/descontos.
+- `GET /api/Sales/{id}` - Obtém a Venda detalhada com o total atualizado e itens com ou sem descontos.
+- `PUT /api/Sales/{id}` - Modifica os cabeçalhos de uma Venda (Cliente, Branch).
+- `DELETE /api/Sales/{id}` - Exclui e/ou marca a Venda como cancelada.
 
-## Project Structure
-This section describes the overall structure and organization of the project files and directories. 
+*Todos os endpoints fornecem um ApiResponse normalizado na saída.*
 
-See [Project Structure](/.doc/project-structure.md)
+## 🤝 Considerações da Entrega
+
+Caso houvesse mais tempo para o desenvolvimento, as próximas melhorias incluiriam:
+1. Conectar um Message Broker Real (RabbitMQ via Rebus) para os eventos `SaleCreated`, `SaleCancelled` com consistência eventual.
+2. Adição de Testes de Integração varrendo do Controller ao Banco no contêiner local usando `Testcontainers`.
+3. Maior granularidade no Update de Venda para manipular individualmente a edição de quantidades nos itens.
