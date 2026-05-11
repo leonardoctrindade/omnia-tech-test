@@ -12,6 +12,7 @@ Este projeto foi construído para avaliação técnica focada na construção de
 - **xUnit, Bogus e NSubstitute** (Testes Unitários)
 - **Docker Compose** (Containerização do Banco de Dados e Cache)
 - **Swagger** (Documentação Interativa da API)
+- **Event-Driven via MediatR (DIFERENCIAL IMPLEMENTADO)**: Publicação e log de eventos (`SaleCreated`, `SaleModified`, `SaleCancelled`, `ItemCancelled`).
 
 ## 💼 Regras de Negócios Implementadas (DDD)
 
@@ -81,7 +82,9 @@ A API oferece as rotas padrão CRUD via `SalesController`:
 
 ## 🤝 Considerações da Entrega
 
-Caso houvesse mais tempo para o desenvolvimento, as próximas melhorias incluiriam:
-1. Conectar um Message Broker Real (RabbitMQ via Rebus) para os eventos `SaleCreated`, `SaleCancelled` com consistência eventual.
-2. Adição de Testes de Integração varrendo do Controller ao Banco no contêiner local usando `Testcontainers`.
+**Diferencial Implementado:** A publicação de eventos (`SaleCreated`, `SaleModified`, `SaleCancelled`, `ItemCancelled`) foi entregue de forma nativa utilizando as Notificações do `MediatR` acopladas ao sistema de Log (conforme permitido pelas orientações de diferencial do teste).
+
+Caso houvesse mais tempo para escalar o desenvolvimento, as próximas melhorias incluiriam:
+1. Conectar os eventos existentes a um Message Broker Real (RabbitMQ via Rebus) para processamento assíncrono entre microsserviços.
+2. Adição de Testes de Integração varrendo do Controller ao Banco no contêiner local usando a biblioteca `Testcontainers`.
 3. Maior granularidade no Update de Venda para manipular individualmente a edição de quantidades nos itens.
