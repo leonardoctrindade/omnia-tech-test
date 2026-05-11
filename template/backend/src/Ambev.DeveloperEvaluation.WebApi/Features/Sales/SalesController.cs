@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales;
 
@@ -39,6 +41,27 @@ public class SalesController : BaseController
             Success = true,
             Message = "Sale created successfully",
             Data = _mapper.Map<CreateSaleResponse>(response)
+        });
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ApiResponseWithData<GetSaleResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSale([FromRoute] Guid id, CancellationToken cancellationToken)
+    {
+        var request = new GetSaleRequest { Id = id };
+        
+        // Simulating validation for simplicity, but usually mapped to a command 
+        // that's validated inside the handler
+        var command = _mapper.Map<GetSaleCommand>(request);
+        var response = await _mediator.Send(command, cancellationToken);
+
+        return Ok(new ApiResponseWithData<GetSaleResponse>
+        {
+            Success = true,
+            Message = "Sale retrieved successfully",
+            Data = _mapper.Map<GetSaleResponse>(response)
         });
     }
 }
